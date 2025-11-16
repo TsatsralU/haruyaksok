@@ -1,0 +1,786 @@
+import React, { useState, useCallback } from 'react';
+// Tailwind CSS는 환경에 따라 자동으로 로드된다고 가정합니다.
+
+// --- 1. Lucide 아이콘 정의 (재사용을 위해 컴포넌트화) ---
+
+const Home = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+    </svg>
+);
+
+const Plus = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+);
+
+const Calendar = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+);
+
+const Settings = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.4-5.4l-4.24 4.24M9.83 9.83l-4.24-4.24m11.31 11.31l-4.24-4.24M9.83 14.17l-4.24 4.24"></path>
+    </svg>
+);
+
+const Bell = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+);
+
+const Check = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+);
+
+const Camera = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+        <circle cx="12" cy="13" r="4"></circle>
+    </svg>
+);
+
+const MapPin = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+);
+
+const Phone = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+    </svg>
+);
+
+const Brain = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"></path>
+        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path>
+    </svg>
+);
+
+const Award = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <circle cx="12" cy="8" r="7"></circle>
+        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+    </svg>
+);
+
+const Pill = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path>
+        <path d="m8.5 8.5 7 7"></path>
+    </svg>
+);
+
+const X = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+);
+
+const ChevronRight = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+);
+
+// --- 2. Custom Confirm Modal 컴포넌트 ---
+
+const ConfirmModal = ({ isOpen, onClose, onConfirm, medicineName, isSenior }) => {
+    if (!isOpen) return null;
+
+    const modalClass = isSenior ? 'p-10' : 'p-8';
+    const titleClass = isSenior ? 'text-3xl mb-6' : 'text-2xl mb-4';
+    const textClass = isSenior ? 'text-xl mb-8' : 'text-base mb-6';
+    const buttonClass = isSenior ? 'py-5 text-xl' : 'py-3 text-lg';
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className={`bg-white rounded-3xl ${modalClass} max-w-sm w-full shadow-2xl text-center`}>
+                <X className={`mx-auto mb-4 text-red-500 ${isSenior ? 'w-10 h-10' : 'w-8 h-8'}`} />
+                <h3 className={`font-bold text-red-600 ${titleClass}`}>
+                    약 삭제 확인
+                </h3>
+                <p className={`text-gray-700 ${textClass}`}>
+                    정말 <span className="font-extrabold text-black">"{medicineName}"</span> 복약 일정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                </p>
+                <div className="flex flex-col gap-3">
+                    <button
+                        onClick={onConfirm}
+                        className={`w-full bg-red-600 text-white rounded-xl font-bold ${buttonClass} hover:bg-red-700 transition`}
+                    >
+                        네, 삭제합니다
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className={`w-full bg-gray-200 text-gray-700 rounded-xl font-bold ${buttonClass} hover:bg-gray-300 transition`}
+                    >
+                        아니요, 취소합니다
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 3. 메인 애플리케이션 컴포넌트 ---
+
+const App = () => {
+    const [currentView, setCurrentView] = useState('onboarding');
+    const [onboardingStep, setOnboardingStep] = useState(0);
+    const [mode, setMode] = useState('basic');
+    const [showAlarm, setShowAlarm] = useState(false);
+    const [showQuiz, setShowQuiz] = useState(false);
+    const [medicines, setMedicines] = useState([
+        { id: 1, name: '혈압약', time: '09:00', taken: true, streak: 7, dose: '1정' },
+        { id: 2, name: '당뇨약', time: '12:00', taken: true, streak: 5, dose: '2정' },
+        // 이 약이 처음 알람의 대상이 됩니다.
+        { id: 3, name: '소화제', time: '18:00', taken: false, streak: 3, dose: '1정' } 
+    ]);
+    const [newMedicine, setNewMedicine] = useState({ name: '', time: '', dose: '' });
+
+    // 삭제 확인 모달 상태
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [medicineToDelete, setMedicineToDelete] = useState(null);
+
+    const isSenior = mode === 'senior';
+    const takenCount = medicines.filter(m => m.taken).length;
+    const maxStreak = Math.max(...medicines.map(m => m.streak));
+
+    // 현재 복용해야 하는 약 (가장 먼저 'taken: false'인 약)을 한 번만 계산하여 사용합니다.
+    const medToTake = medicines.find(m => !m.taken);
+
+    const onboardingSlides = [
+        {
+            icon: <Pill className="w-16 h-16" />,
+            title: '약 복용 관리',
+            description: '간편하게 약을 추가하고\n복용 시간을 관리하세요'
+        },
+        {
+            icon: <Bell className="w-16 h-16" />,
+            title: '정확한 알림',
+            description: '복약 시간이 되면\n3단계 알림으로 알려드려요'
+        },
+        {
+            icon: <Award className="w-16 h-16" />,
+            title: '복약 기록',
+            description: '복약 스트릭과 통계로\n건강 관리를 도와드려요'
+        },
+        {
+            icon: <Brain className="w-16 h-16" />,
+            title: '두뇌 훈련',
+            description: '시니어 모드에서\n인지 훈련 퀴즈를 제공해요'
+        }
+    ];
+
+    const takeMedicine = useCallback((id) => {
+        setMedicines(medicines.map(m => 
+            m.id === id ? { ...m, taken: true, streak: m.streak + 1 } : m
+        ));
+        setShowAlarm(false);
+        setShowQuiz(false);
+    }, [medicines]);
+
+    const addMedicine = useCallback(() => {
+        if (newMedicine.name && newMedicine.time) {
+            setMedicines([...medicines, {
+                id: Date.now(),
+                name: newMedicine.name,
+                time: newMedicine.time,
+                dose: newMedicine.dose || '1정',
+                taken: false,
+                streak: 0
+            }]);
+            setNewMedicine({ name: '', time: '', dose: '' });
+            setCurrentView('home');
+        }
+    }, [medicines, newMedicine]);
+
+    // 삭제 버튼 클릭 핸들러 (모달 열기)
+    const handleDeleteClick = useCallback((med) => {
+        setMedicineToDelete(med);
+        setIsConfirmModalOpen(true);
+    }, []);
+
+    // 실제 삭제 로직 (모달 확인 후 실행)
+    const confirmDeleteMedicine = useCallback(() => {
+        if (medicineToDelete) {
+            setMedicines(medicines.filter(m => m.id !== medicineToDelete.id));
+            setIsConfirmModalOpen(false);
+            setMedicineToDelete(null);
+        }
+    }, [medicines, medicineToDelete]);
+
+    // 온보딩 화면
+    if (currentView === 'onboarding') {
+        const slide = onboardingSlides[onboardingStep];
+        const isLastSlide = onboardingStep === onboardingSlides.length - 1;
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 text-white flex flex-col items-center justify-center p-8 font-['Inter']">
+                <div className="max-w-md w-full text-center">
+                    <div className="bg-white/20 backdrop-blur-sm w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                        {slide.icon}
+                    </div>
+                    
+                    <h1 className="text-5xl font-bold mb-4">하루약속</h1>
+                    <p className="text-xl opacity-90 mb-12">매일 건강을 지키는 약속</p>
+
+                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mb-8">
+                        <h2 className="text-2xl font-bold mb-4">{slide.title}</h2>
+                        <p className="text-lg opacity-90 whitespace-pre-line">{slide.description}</p>
+                    </div>
+
+                    <div className="flex justify-center gap-2 mb-8">
+                        {onboardingSlides.map((_, idx) => (
+                            <div 
+                                key={idx}
+                                className={`w-2 h-2 rounded-full transition-all ${
+                                    idx === onboardingStep ? 'bg-white w-8' : 'bg-white/40'
+                                }`}
+                            />
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            if (isLastSlide) {
+                                setCurrentView('home');
+                            } else {
+                                setOnboardingStep(onboardingStep + 1);
+                            }
+                        }}
+                        className="w-full bg-white text-purple-600 py-4 rounded-xl text-xl font-bold shadow-xl hover:bg-gray-50 transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                    >
+                        {isLastSlide ? '시작하기' : '다음'}
+                        <ChevronRight className="w-6 h-6" />
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // 메인 앱 레이아웃
+    return (
+        <div className={`min-h-screen bg-gray-50 ${isSenior ? 'text-lg' : ''} font-['Inter']`}>
+            {/* 헤더 */}
+            <div className="bg-white shadow-md sticky top-0 z-50">
+                <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+                    <h1 className={`font-bold ${isSenior ? 'text-3xl text-purple-600' : 'text-2xl text-blue-600'}`}>
+                        하루약속
+                    </h1>
+                    <button
+                        onClick={() => setMode(mode === 'basic' ? 'senior' : 'basic')}
+                        className={`px-4 py-2 rounded-full font-bold text-white shadow-md transition-colors active:scale-[0.98] ${
+                            isSenior ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                    >
+                        {isSenior ? '시니어' : '기본'} 모드
+                    </button>
+                </div>
+            </div>
+
+            {/* 컨텐츠 */}
+            <div className="max-w-2xl mx-auto p-4 pb-24">
+                {/* 홈 화면 */}
+                {currentView === 'home' && (
+                    <>
+                        {/* 오늘의 현황 카드 */}
+                        <div className={`rounded-3xl p-6 text-white mb-6 shadow-xl ${
+                            isSenior 
+                                ? 'bg-gradient-to-br from-purple-600 to-pink-500' 
+                                : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                        }`}>
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h2 className={`font-bold mb-2 ${isSenior ? 'text-3xl' : 'text-xl'}`}>
+                                        오늘의 복약
+                                    </h2>
+                                    <p className={isSenior ? 'text-xl' : 'text-sm'}>
+                                        2025년 11월 16일
+                                    </p>
+                                </div>
+                                <MapPin className={isSenior ? 'w-12 h-12' : 'w-8 h-8'} />
+                            </div>
+                            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                                <p className={`mb-2 ${isSenior ? 'text-xl' : 'text-sm'}`}>현재 위치</p>
+                                <p className={`font-bold ${isSenior ? 'text-2xl' : 'text-lg'}`}>🏠 집</p>
+                            </div>
+                        </div>
+
+                        {/* 복약 스트릭 (기본 모드 전용) */}
+                        {!isSenior && (
+                            <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-5 mb-6 shadow-md">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Award className="w-6 h-6 text-yellow-600" />
+                                    <h3 className="text-lg font-bold">복약 스트릭</h3>
+                                </div>
+                                <p className="text-3xl font-bold text-yellow-600 mb-1">
+                                    {maxStreak}일 연속! 🔥
+                                </p>
+                                <p className="text-sm text-gray-600">계속해서 건강을 지키세요!</p>
+                            </div>
+                        )}
+
+                        <h3 className={`font-bold mb-4 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                            오늘의 약 ({takenCount}/{medicines.length})
+                        </h3>
+
+                        {/* 오늘의 약 목록 */}
+                        {medicines.map(med => (
+                            <div
+                                key={med.id}
+                                className={`rounded-xl p-4 mb-3 border-2 flex items-center gap-4 transition-all ${
+                                    med.taken 
+                                        ? 'bg-green-50 border-green-500 shadow-md' 
+                                        : 'bg-white border-gray-200 shadow-sm'
+                                } ${isSenior ? 'p-6' : ''}`}
+                            >
+                                <div className={`rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    med.taken ? 'bg-green-500' : 'bg-red-500 animate-pulse'
+                                } ${isSenior ? 'w-16 h-16' : 'w-12 h-12'}`}>
+                                    {med.taken ? (
+                                        <Check className={`text-white ${isSenior ? 'w-8 h-8' : 'w-6 h-6'}`} />
+                                    ) : (
+                                        <Bell className={`text-white ${isSenior ? 'w-8 h-8' : 'w-6 h-6'}`} />
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className={`font-bold ${isSenior ? 'text-2xl mb-1' : 'text-lg'}`}>
+                                        {med.name}
+                                    </h4>
+                                    <p className={`text-gray-600 ${isSenior ? 'text-xl' : 'text-sm'}`}>
+                                        {med.time} · {med.dose}
+                                    </p>
+                                </div>
+                                {!isSenior && (
+                                    <div className="text-right">
+                                        <div className="flex items-center justify-end gap-1 text-yellow-600 mb-1">
+                                            <Award className="w-5 h-5" />
+                                            <span className="font-bold">{med.streak}일</span>
+                                        </div>
+                                        <p className="text-xs text-gray-500">연속 복용</p>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {/* 알람 테스트 버튼 */}
+                        <button
+                            onClick={() => {
+                                if (medToTake) { // 복용할 약이 있을 때만 알람 테스트 실행
+                                    setShowAlarm(true);
+                                } else {
+                                    // 주의: alert() 대신 메시지 박스 또는 커스텀 모달을 사용해야 하지만,
+                                    // 테스트를 위해 임시로 alert을 사용합니다.
+                                    // 실제 앱에서는 커스텀 UI를 사용해야 합니다.
+                                    alert('오늘 복용할 약이 모두 완료되었습니다.');
+                                }
+                            }}
+                            className={`w-full rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg mt-6 transition active:scale-[0.98] ${
+                                medToTake ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-400 cursor-not-allowed'
+                            } ${
+                                isSenior 
+                                    ? 'py-6 text-xl' 
+                                    : 'py-4 text-base'
+                            }`}
+                            disabled={!medToTake}
+                        >
+                            <Bell className={isSenior ? 'w-7 h-7' : 'w-5 h-5'} />
+                            {medToTake ? '알람 테스트' : '오늘 복약 완료!'}
+                        </button>
+                    </>
+                )}
+
+                {/* 약 추가 화면 */}
+                {currentView === 'add' && (
+                    <>
+                        {/* 카메라 섹션 */}
+                        <div className={`bg-blue-50 border-2 border-blue-500 rounded-2xl text-center mb-6 shadow-lg ${
+                            isSenior ? 'p-8' : 'p-6'
+                        }`}>
+                            <Camera className={`mx-auto mb-4 text-blue-600 ${isSenior ? 'w-16 h-16' : 'w-12 h-12'}`} />
+                            <h3 className={`font-bold mb-3 ${isSenior ? 'text-2xl' : 'text-xl'}`}>
+                                카메라로 촬영
+                            </h3>
+                            <p className={`text-gray-600 mb-4 ${isSenior ? 'text-xl' : 'text-base'}`}>
+                                약 봉투를 촬영하면<br />자동으로 정보를 인식합니다
+                            </p>
+                            <button className={`w-full rounded-xl font-bold text-white shadow-md hover:bg-blue-700 transition active:scale-[0.98] ${
+                                isSenior 
+                                    ? 'bg-purple-600 py-6 text-xl' 
+                                    : 'bg-blue-600 py-4 text-base'
+                            }`}>
+                                📷 촬영하기
+                            </button>
+                        </div>
+
+                        <div className="text-center my-6">
+                            <span className={`inline-block bg-gray-200 rounded-full px-6 py-2 text-gray-600 ${
+                                isSenior ? 'text-lg' : 'text-sm'
+                            }`}>
+                                또는
+                            </span>
+                        </div>
+
+                        {/* 직접 입력 섹션 */}
+                        <div className={`bg-white border-2 border-gray-200 rounded-xl shadow-lg ${isSenior ? 'p-6' : 'p-5'}`}>
+                            <h3 className={`font-bold mb-4 ${isSenior ? 'text-xl' : 'text-lg'}`}>
+                                직접 입력
+                            </h3>
+                            <input
+                                type="text"
+                                placeholder="약 이름"
+                                value={newMedicine.name}
+                                onChange={(e) => setNewMedicine({...newMedicine, name: e.target.value})}
+                                className={`w-full border-2 border-gray-200 rounded-lg mb-3 focus:border-blue-500 outline-none transition ${
+                                    isSenior ? 'p-5 text-xl' : 'p-4 text-base'
+                                }`}
+                            />
+                            <input
+                                type="time"
+                                value={newMedicine.time}
+                                onChange={(e) => setNewMedicine({...newMedicine, time: e.target.value})}
+                                className={`w-full border-2 border-gray-200 rounded-lg mb-3 focus:border-blue-500 outline-none transition ${
+                                    isSenior ? 'p-5 text-xl' : 'p-4 text-base'
+                                }`}
+                            />
+                            <input
+                                type="text"
+                                placeholder="복용량 (예: 1정)"
+                                value={newMedicine.dose}
+                                onChange={(e) => setNewMedicine({...newMedicine, dose: e.target.value})}
+                                className={`w-full border-2 border-gray-200 rounded-lg mb-3 focus:border-blue-500 outline-none transition ${
+                                    isSenior ? 'p-5 text-xl' : 'p-4 text-base'
+                                }`}
+                            />
+                            <button
+                                onClick={addMedicine}
+                                className={`w-full bg-green-600 text-white rounded-xl font-bold shadow-md hover:bg-green-700 transition active:scale-[0.98] ${
+                                    isSenior ? 'py-6 text-xl' : 'py-4 text-base'
+                                }`}
+                            >
+                                등록하기
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                {/* 기록 화면 */}
+                {currentView === 'record' && (
+                    <>
+                        {/* 주간 복약률 차트 */}
+                        <div className={`bg-white border-2 border-gray-200 rounded-xl mb-6 shadow-lg ${
+                            isSenior ? 'p-8' : 'p-6'
+                        }`}>
+                            <h3 className={`font-bold mb-4 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                                이번 주 복약률
+                            </h3>
+                            <div className="text-center mb-4">
+                                <p className={`font-bold text-blue-600 ${isSenior ? 'text-6xl' : 'text-5xl'}`}>
+                                    {Math.round((takenCount / medicines.length) * 100)}%
+                                </p>
+                            </div>
+                            <div className="h-48 flex items-end justify-around gap-2 mb-4">
+                                {['월', '화', '수', '목', '금', '토', '일'].map((day, idx) => {
+                                    // 더 현실적인 가상 높이 (50% ~ 100%)
+                                    const height = 50 + (idx % 3) * 15 + Math.random() * 5; 
+                                    return (
+                                        <div key={idx} className="flex-1 flex flex-col items-center">
+                                            <div 
+                                                className={`w-full rounded-t-lg transition-all ${isSenior ? 'bg-blue-600' : 'bg-blue-500'}`}
+                                                style={{ height: `${height}%` }}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div className="flex justify-around">
+                                {['월', '화', '수', '목', '금', '토', '일'].map(day => (
+                                    <span key={day} className={`text-gray-600 font-medium ${isSenior ? 'text-base' : 'text-sm'}`}>
+                                        {day}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 약별 복약 기록 상세 */}
+                        <h3 className={`font-bold mb-4 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                            약별 복약 기록
+                        </h3>
+                        {medicines.map(med => (
+                            <div key={med.id} className={`bg-white border-2 border-gray-200 rounded-xl mb-3 shadow-sm ${
+                                isSenior ? 'p-6' : 'p-4'
+                            }`}>
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className={`font-bold ${isSenior ? 'text-xl' : 'text-base'}`}>
+                                        {med.name}
+                                    </h4>
+                                    <span className={`text-yellow-600 font-bold ${isSenior ? 'text-base' : 'text-sm'}`}>
+                                        {med.streak}일 연속
+                                    </span>
+                                </div>
+                                <div className="flex gap-1">
+                                    {[...Array(14)].map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className={`flex-1 h-8 rounded transition-colors ${
+                                                i < med.streak ? 'bg-green-500' : 'bg-gray-200'
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                )}
+
+                {/* 설정 화면 */}
+                {currentView === 'settings' && (
+                    <>
+                        {/* 모드 설정 */}
+                        <div className={`bg-white border-2 border-gray-200 rounded-xl mb-6 shadow-lg ${
+                            isSenior ? 'p-6' : 'p-5'
+                        }`}>
+                            <h3 className={`font-bold mb-4 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                                모드 설정
+                            </h3>
+                            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p className={`font-bold ${isSenior ? 'text-xl' : 'text-base'}`}>
+                                        시니어 모드
+                                    </p>
+                                    <p className={`text-gray-600 ${isSenior ? 'text-base' : 'text-sm'}`}>
+                                        큰 글씨와 간편한 화면
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setMode(mode === 'basic' ? 'senior' : 'basic')}
+                                    className={`w-16 h-8 rounded-full relative transition shadow-inner ${
+                                        isSenior ? 'bg-purple-600' : 'bg-gray-300'
+                                    }`}
+                                >
+                                    <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all shadow-md ${
+                                        isSenior ? 'right-1' : 'left-1'
+                                    }`} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 약 관리 섹션 */}
+                        <div className={`bg-white border-2 border-gray-200 rounded-xl mb-6 shadow-lg ${
+                            isSenior ? 'p-6' : 'p-5'
+                        }`}>
+                            <h3 className={`font-bold mb-4 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                                등록된 약 관리
+                            </h3>
+                            {medicines.map(med => (
+                                <div key={med.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg mb-3">
+                                    <div>
+                                        <p className={`font-bold ${isSenior ? 'text-xl' : 'text-base'}`}>
+                                            {med.name}
+                                        </p>
+                                        <p className={`text-gray-600 ${isSenior ? 'text-base' : 'text-sm'}`}>
+                                            {med.time} · {med.dose}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteClick(med)} // 커스텀 모달 호출
+                                        className="p-2 text-red-500 hover:bg-red-100 rounded-full transition active:scale-90"
+                                    >
+                                        <X className={`text-red-500 ${isSenior ? 'w-6 h-6' : 'w-5 h-5'}`} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* 앱 정보 */}
+                        <div className={`bg-white border-2 border-gray-200 rounded-xl shadow-lg ${
+                            isSenior ? 'p-6' : 'p-5'
+                        }`}>
+                            <h3 className={`font-bold mb-3 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                                앱 정보
+                            </h3>
+                            <p className={`text-gray-600 mb-2 ${isSenior ? 'text-base' : 'text-sm'}`}>
+                                버전 1.0.1 (UI 개선)
+                            </p>
+                            <p className={`text-gray-600 ${isSenior ? 'text-base' : 'text-sm'}`}>
+                                © 2025 하루약속 팀
+                            </p>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* 하단 네비게이션 */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-gray-100 shadow-2xl">
+                <div className="max-w-2xl mx-auto flex justify-around p-3">
+                    {[
+                        { id: 'home', icon: Home, label: '홈' },
+                        { id: 'add', icon: Plus, label: '약 추가' },
+                        { id: 'record', icon: Calendar, label: '기록' },
+                        { id: 'settings', icon: Settings, label: '설정' }
+                    ].map(({ id, icon: Icon, label }) => (
+                        <button
+                            key={id}
+                            onClick={() => setCurrentView(id)}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition hover:bg-gray-50 active:scale-95 ${
+                                currentView === id 
+                                    ? isSenior ? 'text-purple-600' : 'text-blue-600'
+                                    : 'text-gray-400'
+                            }`}
+                        >
+                            <Icon className={isSenior ? 'w-8 h-8' : 'w-6 h-6'} />
+                            <span className={`font-medium ${isSenior ? 'text-base' : 'text-xs'}`}>
+                                {label}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* 알람 모달 */}
+            {showAlarm && medToTake && ( // 복용할 약이 있을 때만 렌더링하도록 조건 추가
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+                        <div className="text-center">
+                            <div className="w-20 h-20 mx-auto mb-4 text-red-500 animate-pulse">
+                                <Bell className="w-full h-full" />
+                            </div>
+                            <h3 className={`font-bold mb-4 ${isSenior ? 'text-4xl' : 'text-2xl'}`}>
+                                약 드실 시간이에요!
+                            </h3>
+                            
+                            {/* medToTake 정보를 사용 */}
+                            <p className={`font-bold mb-2 ${isSenior ? 'text-3xl' : 'text-xl'}`}>
+                                {medToTake.name}
+                            </p>
+                            <p className={`text-gray-600 mb-2 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                                {medToTake.time}
+                            </p>
+                            <p className={`text-gray-500 mb-6 ${isSenior ? 'text-xl' : 'text-base'}`}>
+                                {medToTake.dose}
+                            </p>
+                            
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                // medToTake이 없을 경우 버튼 자체가 비활성화되지만, 만약을 대비해 확인합니다.
+                                if (medToTake) { 
+                                    if (isSenior) {
+                                        setShowAlarm(false);
+                                        setShowQuiz(true);
+                                    } else {
+                                        takeMedicine(medToTake.id);
+                                    }
+                                }
+                            }}
+                            className={`w-full bg-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 mb-3 hover:bg-green-700 transition active:scale-[0.98] ${
+                                isSenior ? 'py-6 text-2xl' : 'py-4 text-lg'
+                            }`}
+                        >
+                            <Check className={isSenior ? 'w-7 h-7' : 'w-5 h-5'} />
+                            약 먹었어요
+                        </button>
+                        <button
+                            onClick={() => setShowAlarm(false)}
+                            className={`w-full bg-gray-200 text-gray-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-300 transition active:scale-[0.98] ${
+                                isSenior ? 'py-5 text-xl' : 'py-3 text-base'
+                            }`}
+                        >
+                            <X className={isSenior ? 'w-6 h-6' : 'w-5 h-5'} />
+                            나중에
+                        </button>
+
+                        <div className="mt-6 pt-6 border-t-2 border-gray-200">
+                            <p className={`text-gray-500 text-center mb-3 ${isSenior ? 'text-lg' : 'text-sm'}`}>
+                                응답 방법:
+                            </p>
+                            <div className="flex justify-center gap-6">
+                                <div className="text-center">
+                                    <Phone className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                                    <p className={`text-gray-600 ${isSenior ? 'text-base' : 'text-xs'}`}>
+                                        전화 응답
+                                    </p>
+                                </div>
+                                <div className="text-center">
+                                    <Bell className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                                    <p className={`text-gray-600 ${isSenior ? 'text-base' : 'text-xs'}`}>
+                                        음성 명령
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 퀴즈 모달 (시니어 모드) */}
+            {showQuiz && medToTake && ( // 복용할 약이 있을 때만 렌더링하도록 조건 추가
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+                        <div className="text-center">
+                            <div className="w-20 h-20 mx-auto mb-4 text-purple-600">
+                                <Brain className="w-full h-full" />
+                            </div>
+                            <h3 className={`font-bold mb-6 ${isSenior ? 'text-4xl' : 'text-2xl'}`}>
+                                인지 훈련 퀴즈
+                            </h3>
+                            <p className={`mb-8 ${isSenior ? 'text-2xl' : 'text-lg'}`}>
+                                지금 몇 시에 약을 드시나요? (정답: {medToTake.time})
+                            </p>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="예: 9시"
+                            className={`w-full border-4 border-purple-600 rounded-xl text-center mb-4 focus:ring-4 focus:ring-purple-200 outline-none transition ${
+                                isSenior ? 'p-5 text-2xl' : 'p-4 text-lg'
+                            }`}
+                        />
+                        <button
+                            onClick={() => {
+                                // 퀴즈 완료 후, 현재 복용 중인 약의 ID를 사용해 복용 처리
+                                if (medToTake) {
+                                    takeMedicine(medToTake.id);
+                                }
+                            }}
+                            className={`w-full bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition active:scale-[0.98] ${
+                                isSenior ? 'py-6 text-2xl' : 'py-4 text-lg'
+                            }`}
+                        >
+                            확인
+                        </button>
+                    </div>
+                </div>
+            )}
+            
+            {/* 약 삭제 확인 모달 */}
+            <ConfirmModal 
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={confirmDeleteMedicine}
+                medicineName={medicineToDelete ? medicineToDelete.name : ''}
+                isSenior={isSenior}
+            />
+        </div>
+    );
+};
+
+export default App;
+```eof
